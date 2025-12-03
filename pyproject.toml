@@ -1,0 +1,24 @@
+[project]
+name = "vacancy-crawler"
+version = "0.1.0"
+description = ""
+authors = [{ name = "Your Name", email = "you@example.com" }]
+readme = "readme.md"
+requires-python = ">=3.11"
+dependencies = [
+    "playwright (>=1.56.0,<2.0.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "isort (>=7.0.0,<8.0.0)",
+    "black (>=25.11.0,<26.0.0)",
+    "flake8 (>=7.3.0,<8.0.0)",
+    "mypy (>=1.18.2,<2.0.0)",
+]
