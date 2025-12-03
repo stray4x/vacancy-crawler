@@ -72,7 +72,6 @@ async def run_parser(url: str):
 
         print(f"Opening {url}")
         await page.goto(url, timeout=60000)
-        print("✔ Page loaded")
 
         await page.wait_for_selector("header div span")
         await asyncio.sleep(random.uniform(0.1, 2))
@@ -96,7 +95,7 @@ async def run_parser(url: str):
                 await parse_page_list(page, data)
 
         filename = f"report_{datetime.today().strftime('%d-%m-%y')}.json"
-        output_dir = Path(__file__).parent.parent / "output"
+        output_dir = Path("output")
         output_dir.mkdir(parents=True, exist_ok=True)
         file_path = output_dir / filename
 
