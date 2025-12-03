@@ -1,4 +1,4 @@
-from constants import QUERY_PARAMS
+from utils.constants import QUERY_PARAMS
 
 
 def generate_url(keyword: str, exp_level: str):

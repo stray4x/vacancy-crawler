@@ -2,7 +2,11 @@ import random
 from playwright.async_api import async_playwright, Page
 import asyncio
 
-from constants import VACANCY_LIST_SELECTORS, VACANCY_DETAIL_SELECTORS, PYTHON_KEYWORDS
+from utils.constants import (
+    VACANCY_LIST_SELECTORS,
+    VACANCY_DETAIL_SELECTORS,
+    PYTHON_KEYWORDS,
+)
 
 
 should_recommend = ["django", "drf", "postgres", "django rest framework"]

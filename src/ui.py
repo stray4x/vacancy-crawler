@@ -1,4 +1,4 @@
-from utils import get_options_list
+from utils.utils import get_options_list
 
 
 def print_summary(keyword: str, exp_level: str):
