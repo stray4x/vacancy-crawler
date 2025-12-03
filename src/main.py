@@ -1,8 +1,8 @@
 import asyncio
-
-from utils.constants import QUERY_PARAMS
 from parser.parser import run_parser
+
 from ui import ask_option, confirm, print_summary
+from utils.constants import QUERY_PARAMS
 from utils.utils import generate_url
 
 

@@ -1,14 +1,16 @@
-import random
-from playwright.async_api import async_playwright, Page
 import asyncio
 import json
-from utils.constants import (
-    VACANCY_LIST_SELECTORS,
-    VACANCY_DETAIL_SELECTORS,
-    PYTHON_KEYWORDS,
-)
+import random
 from datetime import datetime
 from pathlib import Path
+
+from playwright.async_api import Page, async_playwright
+
+from utils.constants import (
+    PYTHON_KEYWORDS,
+    VACANCY_DETAIL_SELECTORS,
+    VACANCY_LIST_SELECTORS,
+)
 
 should_recommend = ["django", "drf", "postgres", "django rest framework"]
 
