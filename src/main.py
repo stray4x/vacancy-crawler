@@ -1,7 +1,7 @@
 import asyncio
 
 from utils.constants import QUERY_PARAMS
-from parser import run_parser
+from parser.parser import run_parser
 from ui import ask_option, confirm, print_summary
 from utils.utils import generate_url
 
@@ -27,8 +27,6 @@ def start():
 
     except Exception as e:
         print(f"\nError: {e}")
-        print("fuck you, I quit")
-        return
 
 
 if __name__ == "__main__":

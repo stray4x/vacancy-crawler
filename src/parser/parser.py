@@ -1,13 +1,14 @@
 import random
 from playwright.async_api import async_playwright, Page
 import asyncio
-
+import json
 from utils.constants import (
     VACANCY_LIST_SELECTORS,
     VACANCY_DETAIL_SELECTORS,
     PYTHON_KEYWORDS,
 )
-
+from datetime import datetime
+from pathlib import Path
 
 should_recommend = ["django", "drf", "postgres", "django rest framework"]
 
@@ -94,7 +95,26 @@ async def run_parser(url: str):
                 await page.goto(new_url, timeout=60000)
                 await parse_page_list(page, data)
 
-        print(data)
-        print(recommended_vacancies)
+        filename = f"report_{datetime.today().strftime('%d-%m-%y')}.json"
+        output_dir = Path(__file__).parent.parent / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        file_path = output_dir / filename
+
+        with open(
+            file_path,
+            mode="w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(
+                {
+                    **data,
+                    "recommended_vacancies": list(recommended_vacancies),
+                },
+                f,
+                ensure_ascii=False,
+                indent=4,
+            )
 
         await browser.close()
+
+        print("done")
