@@ -6,11 +6,8 @@ from pathlib import Path
 
 from playwright.async_api import Page, async_playwright
 
-from utils.constants import (
-    PYTHON_KEYWORDS,
-    VACANCY_DETAIL_SELECTORS,
-    VACANCY_LIST_SELECTORS,
-)
+from utils.constants import (PYTHON_KEYWORDS, VACANCY_DETAIL_SELECTORS,
+                             VACANCY_LIST_SELECTORS)
 
 should_recommend = ["django", "drf", "postgres", "django rest framework"]
 
@@ -95,6 +92,7 @@ async def run_parser(url: str):
                 new_url = f"{url}&page={current_page}"
                 await page.goto(new_url, timeout=60000)
                 await parse_page_list(page, data)
+                await asyncio.sleep(random.uniform(1, 5))
 
         filename = f"report_{datetime.today().strftime('%d-%m-%y')}.json"
         output_dir = Path("output")
