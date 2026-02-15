@@ -4,7 +4,7 @@ A CLI tool that parses Djinni job listings and generates a top 15 recommended va
 
 ## Options
 
-```bash
+```console
 options:
   -h, --help            show this help message and exit
   --no-headless         Run browser in visible mode (default: headless)
