@@ -1,0 +1,5 @@
+JAVASCRIPT = "JavaScript"
+FULLSTACK = "Fullstack"
+NODEJS = "Node.js"
+REACT = "React.js"
+PYTHON = "Python"

@@ -1,17 +1,15 @@
-# -------------------------------------------------------------------------------
-# params
-# -------------------------------------------------------------------------------
+from constants.categories import FULLSTACK, JAVASCRIPT, NODEJS, PYTHON, REACT
 
 
 MAX_PARAMS_LIMIT = 20
 
 QUERY_PARAMS: dict[str, list] = {
     "primary_keyword": [
-        "JavaScript",
-        "Fullstack",
-        "Node.js",
-        "React.js",
-        "Python",
+        JAVASCRIPT,
+        FULLSTACK,
+        NODEJS,
+        REACT,
+        PYTHON,
     ],
     "exp_level": [
         "no_exp",
@@ -56,44 +54,3 @@ ASK_OPTIONS = {
     ],
     "employment": QUERY_PARAMS["employment"],
 }
-
-# -------------------------------------------------------------------------------
-# parsing
-# -------------------------------------------------------------------------------
-
-VACANCY_LIST_SELECTORS = {
-    "vacancies_count": "header span.fs-1.fw-bold.text-muted",
-    "job_link": "a.job-item__title-link",
-    "pagination": "ul.pagination",
-    "page_link": "ul.pagination a.page-link",
-}
-
-VACANCY_DETAIL_SELECTORS = {
-    "job_title": "header h1",
-    "job_desc": ".job-post__description",
-    "skills": "table.table",
-}
-
-PYTHON_KEYWORDS = [
-    "python",
-    "django",
-    "fastapi",
-    "fast api",
-    "flask",
-    "django rest framework",
-    "drf",
-    "celery",
-    "kafka",
-    "rabbitmq",
-    "redis",
-    "postgres",
-    "mysql",
-    "sql",
-    "graphql",
-    "selenium",
-    "playwright",
-    "aws",
-    "docker",
-    "websockets",
-    "sqlalchemy",
-]

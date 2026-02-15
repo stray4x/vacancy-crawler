@@ -4,94 +4,83 @@ import random
 from datetime import datetime
 from pathlib import Path
 
-from playwright.async_api import Page, async_playwright
+from playwright.async_api import Page, async_playwright, ElementHandle
 
-from utils.constants import (PYTHON_KEYWORDS, VACANCY_DETAIL_SELECTORS,
-                             VACANCY_LIST_SELECTORS)
+from constants.keywords import KEYWORDS
+from constants.parser import PAGE_SIZE, VACANCY_LIST_SELECTORS
 
-should_recommend = ["django", "drf", "postgres", "django rest framework"]
-
-recommended_vacancies = set()
+recommended_vacancies: list[dict] = []
 
 
-async def parse_vacancy_page(page: Page, data: dict, page_link: str):
-    print(f"Parsing: {page_link}")
-    await page.goto(page_link, timeout=60000)
-    await page.wait_for_selector(VACANCY_DETAIL_SELECTORS["job_title"])
-    await asyncio.sleep(random.uniform(1, 4))
+async def parse_job_item(li_element: ElementHandle, kewords: list[str]):
+    job_link_data = await li_element.eval_on_selector(
+        VACANCY_LIST_SELECTORS["job_link"],
+        "el => ({ href: el.href, text: el.innerText.trim() })",
+    )
 
-    title = await page.inner_text(VACANCY_DETAIL_SELECTORS["job_title"])
-    print(f"Vacancy: {title}")
+    link: str = job_link_data["href"]
+    title = job_link_data["text"]
 
-    try:
-        desc = await page.inner_text(VACANCY_DETAIL_SELECTORS["job_desc"])
-    except Exception as e:
-        print(e)
-        desc = ""
+    desc_block = await li_element.query_selector(VACANCY_LIST_SELECTORS["job_desc"])
 
-    try:
-        skills = await page.inner_text(VACANCY_DETAIL_SELECTORS["skills"])
-    except Exception as e:
-        print(e)
-        skills = ""
+    if desc_block is not None:
 
-    text = (desc + " " + skills).lower()
+        vacancy = {"title": title, "link": link, "score": 0}
 
-    for key in PYTHON_KEYWORDS:
-        data.setdefault(key, 0)
+        text: str = await desc_block.evaluate("el => el.textContent")
+        text = text.lower()
 
-        if key in text:
-            data[key] += 1
+        for keyword in kewords:
+            if keyword in text:
+                vacancy["score"] += KEYWORDS[keyword]["weight"]
 
-    for key in should_recommend:
-        if key in should_recommend:
-            recommended_vacancies.add(page_link)
+        recommended_vacancies.append(vacancy)
 
 
-async def parse_page_list(page: Page, data: dict):
+async def parse_page_list(page: Page, kewords: list[str]):
     await page.wait_for_selector(VACANCY_LIST_SELECTORS["job_link"])
     await asyncio.sleep(random.uniform(1, 7))
 
-    vacancy_links: list[str] = await page.eval_on_selector_all(
-        VACANCY_LIST_SELECTORS["job_link"],
-        "elements => elements.map(el => el.href)",
-    )
+    job_items = await page.query_selector_all(VACANCY_LIST_SELECTORS["job_item"])
 
-    for item in vacancy_links:
-        await parse_vacancy_page(page, data, item)
+    print(f"job items: {len(job_items)}")
+
+    for li in job_items:
+        await parse_job_item(li, kewords)
 
 
-async def run_parser(url: str):
+async def run_parser(url: str, keywords: list[str]):
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
         page = await browser.new_page()
 
-        page_size = 15
         total_pages = 0
 
         print(f"Opening {url}")
         await page.goto(url, timeout=60000)
 
-        await page.wait_for_selector("header div span")
+        await page.wait_for_selector(VACANCY_LIST_SELECTORS["jobs_total"])
         await asyncio.sleep(random.uniform(0.1, 2))
 
         data = {"jobs_total": 0}
 
         try:
-            total_jobs = int(await page.inner_text("header div span"))
-            total_pages = (int(total_jobs) + page_size - 1) // page_size
+            total_jobs = int(
+                await page.inner_text(VACANCY_LIST_SELECTORS["jobs_total"])
+            )
+            total_pages = (int(total_jobs) + PAGE_SIZE - 1) // PAGE_SIZE
 
             data["jobs_total"] = total_jobs
         except Exception as e:
             print(e)
 
-        await parse_page_list(page, data)
+        await parse_page_list(page, keywords)
 
         if total_pages > 1:
             for current_page in range(2, total_pages):
                 new_url = f"{url}&page={current_page}"
                 await page.goto(new_url, timeout=60000)
-                await parse_page_list(page, data)
+                await parse_page_list(page, keywords)
                 await asyncio.sleep(random.uniform(1, 5))
 
         filename = f"report_{datetime.today().strftime('%d-%m-%y')}.json"
@@ -107,7 +96,11 @@ async def run_parser(url: str):
             json.dump(
                 {
                     **data,
-                    "recommended_vacancies": list(recommended_vacancies),
+                    "recommended_vacancies": sorted(
+                        recommended_vacancies,
+                        key=lambda x: x["score"],
+                        reverse=True,
+                    )[:15],
                 },
                 f,
                 ensure_ascii=False,

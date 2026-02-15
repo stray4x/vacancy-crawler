@@ -3,7 +3,8 @@ from urllib.parse import quote_plus
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 
-from utils.constants import MAX_PARAMS_LIMIT, QUERY_PARAMS
+from constants.params import MAX_PARAMS_LIMIT, QUERY_PARAMS
+from constants.keywords import KEYWORDS
 
 
 def ask_options(message: str, options: list[str], total_selected: int) -> list[str]:
@@ -11,12 +12,16 @@ def ask_options(message: str, options: list[str], total_selected: int) -> list[s
         return []
     remaining = MAX_PARAMS_LIMIT - total_selected
 
+    transformer = (
+        lambda res: f"Total params: {len(res) + total_selected} / {MAX_PARAMS_LIMIT}"
+    )
+
     result: list[str] = inquirer.checkbox(
         message=message,
         choices=[Choice(value=option, name=option) for option in options],
         validate=lambda res: len(res) <= remaining,
         invalid_message=f"{MAX_PARAMS_LIMIT} params maximum",
-        transformer=lambda res: f"Total params: {len(res) + total_selected} / {MAX_PARAMS_LIMIT}",
+        transformer=transformer,
     ).execute()
 
     if None in result:
@@ -34,16 +39,48 @@ def ask_single_option(message: str, options: list, total_selected: int) -> str |
 
     choices = [SKIP_OPTION] + options
 
+    def transformer(res) -> str:
+        if res != SKIP_OPTION:
+            current_total = total_selected + 1
+        else:
+            current_total = total_selected
+
+        return f"Total params: {current_total} / {MAX_PARAMS_LIMIT}"
+
     result = inquirer.select(
         message=message,
         choices=choices,
-        transformer=lambda res: f"Total params: {(total_selected + 1) if res != SKIP_OPTION else total_selected} / {MAX_PARAMS_LIMIT}",
+        transformer=transformer,
     ).execute()
 
     if result == SKIP_OPTION:
         return None
 
     print(result)
+
+    return result
+
+
+def get_keywords_for_categories(categories: list[str]) -> list[str]:
+    result: list[str] = []
+
+    for keyword, meta in KEYWORDS.items():
+        if any(cat in meta["categories"] for cat in categories):
+            result.append(keyword)
+
+    return result
+
+
+def ask_keywords(categories: list[str]):
+
+    choices = get_keywords_for_categories(categories)
+
+    result: list[str] = inquirer.checkbox(
+        message="Keywords for recommendations",
+        choices=[Choice(value=option, name=option) for option in choices],
+        validate=lambda res: len(res) >= 1,
+        invalid_message="Pick at least 1",
+    ).execute()
 
     return result
 

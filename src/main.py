@@ -1,8 +1,9 @@
-# import asyncio
-# from parser.parser import run_parser
+import asyncio
+from parser.parser import run_parser
 
-from utils.constants import ASK_OPTIONS
+from constants.params import ASK_OPTIONS
 from utils.utils import (
+    ask_keywords,
     ask_options,
     ask_single_option,
     confirm,
@@ -16,10 +17,10 @@ def start():
     total_selected = 0
 
     try:
-        keyword = ask_options(
+        category = ask_options(
             "Category:", ASK_OPTIONS["primary_keyword"], total_selected
         )
-        total_selected += len(keyword)
+        total_selected += len(category)
 
         exp_level = ask_options(
             "Experience level:",
@@ -46,22 +47,24 @@ def start():
         )
         total_selected += len(english_level)
 
+        keywords = ask_keywords(category)
+
         print_summary(
-            Category=keyword,
+            Category=category,
             Experience_Level=exp_level,
             Salary_From=f"{salary}$" if salary else None,
             Company_Type=company_type,
             Employment=employment,
             English_Level=english_level,
+            Keywords=keywords,
         )
 
         if confirm("Start parsing?"):
             url = generate_url(
-                keyword, exp_level, salary, company_type, employment, english_level
+                category, exp_level, salary, company_type, employment, english_level
             )
-            print(url)
 
-        #   asyncio.run(run_parser(url))
+            asyncio.run(run_parser(url, keywords))
         else:
             print("exit")
 
