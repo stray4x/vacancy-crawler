@@ -3,8 +3,8 @@ from urllib.parse import quote_plus
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 
-from constants.params import MAX_PARAMS_LIMIT, QUERY_PARAMS
 from constants.keywords import KEYWORDS
+from constants.params import MAX_PARAMS_LIMIT, QUERY_PARAMS
 
 
 def ask_options(message: str, options: list[str], total_selected: int) -> list[str]:

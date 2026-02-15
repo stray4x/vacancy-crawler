@@ -1,13 +1,12 @@
 import asyncio
-import json
 import random
-from datetime import datetime
-from pathlib import Path
+from parser.output import print_result, save_to_json
 
-from playwright.async_api import Page, async_playwright, ElementHandle
+from playwright.async_api import ElementHandle, Page, async_playwright
 
 from constants.keywords import KEYWORDS
 from constants.parser import PAGE_SIZE, VACANCY_LIST_SELECTORS
+from utils.args import ARG_HEADLESS, ARG_OUT
 
 recommended_vacancies: list[dict] = []
 
@@ -43,22 +42,18 @@ async def parse_page_list(page: Page, kewords: list[str]):
 
     job_items = await page.query_selector_all(VACANCY_LIST_SELECTORS["job_item"])
 
-    print(f"job items: {len(job_items)}")
-
     for li in job_items:
         await parse_job_item(li, kewords)
 
 
 async def run_parser(url: str, keywords: list[str]):
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=ARG_HEADLESS)
         page = await browser.new_page()
 
         total_pages = 0
 
-        print(f"Opening {url}")
         await page.goto(url, timeout=60000)
-
         await page.wait_for_selector(VACANCY_LIST_SELECTORS["jobs_total"])
         await asyncio.sleep(random.uniform(0.1, 2))
 
@@ -79,33 +74,19 @@ async def run_parser(url: str, keywords: list[str]):
         if total_pages > 1:
             for current_page in range(2, total_pages):
                 new_url = f"{url}&page={current_page}"
+
                 await page.goto(new_url, timeout=60000)
                 await parse_page_list(page, keywords)
                 await asyncio.sleep(random.uniform(1, 5))
 
-        filename = f"report_{datetime.today().strftime('%d-%m-%y')}.json"
-        output_dir = Path("output")
-        output_dir.mkdir(parents=True, exist_ok=True)
-        file_path = output_dir / filename
-
-        with open(
-            file_path,
-            mode="w",
-            encoding="utf-8",
-        ) as f:
-            json.dump(
-                {
-                    **data,
-                    "recommended_vacancies": sorted(
-                        recommended_vacancies,
-                        key=lambda x: x["score"],
-                        reverse=True,
-                    )[:15],
-                },
-                f,
-                ensure_ascii=False,
-                indent=4,
-            )
+        match ARG_OUT:
+            case "file":
+                save_to_json(data, recommended_vacancies)
+            case "print":
+                print_result(data["jobs_total"], recommended_vacancies)
+            case "both":
+                save_to_json(data, recommended_vacancies)
+                print_result(data["jobs_total"], recommended_vacancies)
 
         await browser.close()
 

@@ -1,5 +1,4 @@
-from constants.categories import REACT, FULLSTACK, JAVASCRIPT, NODEJS, PYTHON
-
+from constants.categories import FULLSTACK, JAVASCRIPT, NODEJS, PYTHON, REACT
 
 KEYWORDS = {
     # ---------------------------------------------------------------------------

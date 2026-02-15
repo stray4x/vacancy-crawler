@@ -1,6 +1,5 @@
 from constants.categories import FULLSTACK, JAVASCRIPT, NODEJS, PYTHON, REACT
 
-
 MAX_PARAMS_LIMIT = 20
 
 QUERY_PARAMS: dict[str, list] = {
