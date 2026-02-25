@@ -27,6 +27,8 @@ KEYWORDS = {
     "mongoose": {"categories": [NODEJS], "weight": 1},
     "prisma": {"categories": [NODEJS, FULLSTACK], "weight": 1},
     "typeorm": {"categories": [NODEJS], "weight": 1},
+    "drizzle": {"categories": [NODEJS], "weight": 1},
+    "sequelize": {"categories": [NODEJS], "weight": 1},
     # ---------------------------------------------------------------------------
     # Python
     # ---------------------------------------------------------------------------
@@ -50,4 +52,5 @@ KEYWORDS = {
     "redis": {"categories": [NODEJS, PYTHON], "weight": 1},
     "rabbitmq": {"categories": [NODEJS, PYTHON], "weight": 1},
     "kafka": {"categories": [NODEJS, PYTHON], "weight": 1},
+    "kubernetes": {"categories": [NODEJS, PYTHON], "weight": 1},
 }

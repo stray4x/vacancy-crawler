@@ -12,4 +12,5 @@ options:
   --out {file,print,both}
                         Output mode: save to file, print in terminal, or both (default: file)
   --limit NUMBER        Set number of recommended vacancies to return (default: 15)
+  --stackstat, -sst     Stack statistics mode: show popularity stats for selected technologies.
 ```

@@ -6,12 +6,18 @@ from playwright.async_api import ElementHandle, Page, async_playwright
 
 from constants.keywords import KEYWORDS
 from constants.parser import PAGE_SIZE, VACANCY_LIST_SELECTORS
-from utils.args import ARG_HEADLESS, ARG_OUT
+from utils.args import ARG_HEADLESS, ARG_OUT, ARG_STACK_STAT
+from utils.types import DataDict
 
-recommended_vacancies: list[dict] = []
+
+data: DataDict = {
+    "jobs_total": 0,
+    "recommended_vacancies": [],
+    "stack_statistics": {},
+}
 
 
-async def parse_job_item(li_element: ElementHandle, kewords: list[str]):
+async def parse_recommendation(li_element: ElementHandle, keywords: list[str]):
     job_link_data = await li_element.eval_on_selector(
         VACANCY_LIST_SELECTORS["job_link"],
         "el => ({ href: el.href, text: el.innerText.trim() })",
@@ -23,17 +29,37 @@ async def parse_job_item(li_element: ElementHandle, kewords: list[str]):
     desc_block = await li_element.query_selector(VACANCY_LIST_SELECTORS["job_desc"])
 
     if desc_block is not None:
-
         vacancy = {"title": title, "link": link, "score": 0}
 
         text: str = await desc_block.evaluate("el => el.textContent")
         text = text.lower()
 
-        for keyword in kewords:
+        for keyword in keywords:
             if keyword in text:
                 vacancy["score"] += KEYWORDS[keyword]["weight"]
 
-        recommended_vacancies.append(vacancy)
+        data["recommended_vacancies"].append(vacancy)
+
+
+async def parse_stack_stats(li_element: ElementHandle, keywords: list[str]):
+    desc_block = await li_element.query_selector(VACANCY_LIST_SELECTORS["job_desc"])
+
+    if desc_block is not None:
+        text: str = await desc_block.evaluate("el => el.textContent")
+        text = text.lower()
+
+        for keyword in keywords:
+            if keyword in text:
+                data["stack_statistics"][keyword] = (
+                    data["stack_statistics"].get(keyword, 0) + 1
+                )
+
+
+async def parse_job_item(li_element: ElementHandle, keywords: list[str]):
+    if ARG_STACK_STAT:
+        await parse_stack_stats(li_element, keywords)
+    else:
+        await parse_recommendation(li_element, keywords)
 
 
 async def parse_page_list(page: Page, kewords: list[str]):
@@ -48,6 +74,8 @@ async def parse_page_list(page: Page, kewords: list[str]):
 
 async def run_parser(url: str, keywords: list[str]):
     async with async_playwright() as p:
+        print("Parsing...")
+
         browser = await p.chromium.launch(headless=ARG_HEADLESS)
         page = await browser.new_page()
 
@@ -56,8 +84,6 @@ async def run_parser(url: str, keywords: list[str]):
         await page.goto(url, timeout=60000)
         await page.wait_for_selector(VACANCY_LIST_SELECTORS["jobs_total"])
         await asyncio.sleep(random.uniform(0.1, 2))
-
-        data = {"jobs_total": 0}
 
         try:
             total_jobs = int(
@@ -81,12 +107,12 @@ async def run_parser(url: str, keywords: list[str]):
 
         match ARG_OUT:
             case "file":
-                save_to_json(data, recommended_vacancies)
+                save_to_json(data)
             case "print":
-                print_result(data["jobs_total"], recommended_vacancies)
+                print_result(data)
             case "both":
-                save_to_json(data, recommended_vacancies)
-                print_result(data["jobs_total"], recommended_vacancies)
+                save_to_json(data)
+                print_result(data)
 
         await browser.close()
 

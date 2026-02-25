@@ -29,6 +29,13 @@ parser.add_argument(
     metavar="NUMBER",
     help="Set number of recommended vacancies to return (default: 15)",
 )
+parser.add_argument(
+    "--stackstat",
+    "-sst",
+    action="store_true",
+    dest="stackstat",
+    help="Stack statistics mode: show popularity stats for selected technologies.",
+)
 
 
 args = parser.parse_args()
@@ -37,3 +44,4 @@ ARG_HEADLESS = args.headless
 ARG_PATH = args.path
 ARG_LIMIT = args.limit
 ARG_OUT = args.out
+ARG_STACK_STAT = args.stackstat
