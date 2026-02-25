@@ -1,6 +1,6 @@
 # Djinni parser
 
-A CLI tool that parses Djinni job listings and generates a top 15 recommended vacancies list based on selected filters and keyword scoring.
+A CLI tool for parsing Djinni job listings, ranking vacancies by keyword relevance, and analyzing technology trends via Stack Statistics mode.
 
 ## Options
 
