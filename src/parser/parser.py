@@ -1,20 +1,43 @@
 import asyncio
 import random
+import re
 from parser.output import print_result, save_to_json
 
 from playwright.async_api import ElementHandle, Page, async_playwright
 
 from constants.keywords import KEYWORDS
 from constants.parser import PAGE_SIZE, VACANCY_LIST_SELECTORS
-from utils.args import ARG_HEADLESS, ARG_OUT, ARG_STACK_STAT
+from utils.args import ARG_HEADLESS, ARG_OUT, ARG_STATS
 from utils.types import DataDict
 
 
 data: DataDict = {
     "jobs_total": 0,
+    "max_applications": 0,
+    "total_applications": 0,
     "recommended_vacancies": [],
     "stack_statistics": {},
 }
+
+
+async def parse_job_applications(li_element: ElementHandle):
+    views_block = await li_element.query_selector(
+        VACANCY_LIST_SELECTORS["views_responses"]
+    )
+
+    if views_block:
+        spans = await views_block.query_selector_all(".text-nowrap")
+
+        if len(spans) >= 2:
+            span_text = await spans[1].evaluate("el => el.textContent")
+            match = re.search(r"\d+", span_text)
+
+            if match:
+                count = int(match.group())
+                data["total_applications"] += count
+
+                if count > data.get("max_applications", 0):
+                    data["max_applications"] = count
 
 
 async def parse_recommendation(li_element: ElementHandle, keywords: list[str]):
@@ -45,6 +68,7 @@ async def parse_stack_stats(li_element: ElementHandle, keywords: list[str]):
     desc_block = await li_element.query_selector(VACANCY_LIST_SELECTORS["job_desc"])
 
     if desc_block is not None:
+        await parse_job_applications(li_element)
         text: str = await desc_block.evaluate("el => el.textContent")
         text = text.lower()
 
@@ -56,9 +80,9 @@ async def parse_stack_stats(li_element: ElementHandle, keywords: list[str]):
 
 
 async def parse_job_item(li_element: ElementHandle, keywords: list[str]):
-    if ARG_STACK_STAT:
+    if ARG_STATS:
         await parse_stack_stats(li_element, keywords)
-    else:
+    else:  # ARG_RECOMMEND:
         await parse_recommendation(li_element, keywords)
 
 

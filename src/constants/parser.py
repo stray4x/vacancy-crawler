@@ -5,4 +5,5 @@ VACANCY_LIST_SELECTORS = {
     "job_item": "[id^='job-item']",
     "job_link": "a.job_item__header-link",
     "job_desc": "[id^='job-description']",
+    "views_responses": "div.d-flex.align-items-center.gap-1.fs-5",
 }

@@ -27,14 +27,19 @@ parser.add_argument(
     default=15,
     dest="limit",
     metavar="NUMBER",
-    help="Set number of recommended vacancies to return (default: 15)",
+    help="Set number of recommended vacancies to return (default: 15). Woks only in recommendation mode.",
 )
 parser.add_argument(
-    "--stackstat",
-    "-sst",
+    "-recs",
     action="store_true",
-    dest="stackstat",
-    help="Stack statistics mode: show popularity stats for selected technologies.",
+    dest="recommend",
+    help="Recommendations mode: show recommended vacancies based on user preferences. This is the default mode.",
+)
+parser.add_argument(
+    "-stat",
+    action="store_true",
+    dest="stats",
+    help="Statistics mode: show vacancies statistics based on user preferences.",
 )
 
 
@@ -44,4 +49,5 @@ ARG_HEADLESS = args.headless
 ARG_PATH = args.path
 ARG_LIMIT = args.limit
 ARG_OUT = args.out
-ARG_STACK_STAT = args.stackstat
+ARG_STATS = args.stats
+ARG_RECOMMEND = args.recommend

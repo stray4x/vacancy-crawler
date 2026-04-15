@@ -5,7 +5,7 @@ from InquirerPy.base.control import Choice
 
 from constants.keywords import KEYWORDS
 from constants.params import MAX_PARAMS_LIMIT, QUERY_PARAMS
-from utils.args import ARG_STACK_STAT
+from utils.args import ARG_STATS
 
 
 def ask_options(message: str, options: list[str], total_selected: int) -> list[str]:
@@ -77,7 +77,7 @@ def ask_keywords(categories: list[str]):
     choices = get_keywords_for_categories(categories)
 
     result: list[str] = inquirer.checkbox(
-        message=f"Keywords for {'stats' if ARG_STACK_STAT else 'recommendations' }",
+        message=f"Keywords for {'stats' if ARG_STATS else 'recommendations' }",
         choices=[Choice(value=option, name=option) for option in choices],
         validate=lambda res: len(res) >= 1,
         invalid_message="Pick at least 1",
