@@ -8,15 +8,19 @@ from playwright.async_api import ElementHandle, Page, async_playwright
 from constants.keywords import KEYWORDS
 from constants.parser import PAGE_SIZE, VACANCY_LIST_SELECTORS
 from utils.args import ARG_HEADLESS, ARG_OUT, ARG_STATS
-from utils.types import DataDict
+from utils.types import StatsData, RecommendationsData
 
 
-data: DataDict = {
+stats_data: StatsData = {
     "jobs_total": 0,
     "max_applications": 0,
     "total_applications": 0,
-    "recommended_vacancies": [],
     "stack_statistics": {},
+}
+
+recommendations_data: RecommendationsData = {
+    "jobs_total": 0,
+    "recommended_vacancies": [],
 }
 
 
@@ -34,10 +38,10 @@ async def parse_job_applications(li_element: ElementHandle):
 
             if match:
                 count = int(match.group())
-                data["total_applications"] += count
+                stats_data["total_applications"] += count
 
-                if count > data.get("max_applications", 0):
-                    data["max_applications"] = count
+                if count > stats_data["max_applications"]:
+                    stats_data["max_applications"] = count
 
 
 async def parse_recommendation(li_element: ElementHandle, keywords: list[str]):
@@ -61,7 +65,7 @@ async def parse_recommendation(li_element: ElementHandle, keywords: list[str]):
             if keyword in text:
                 vacancy["score"] += KEYWORDS[keyword]["weight"]
 
-        data["recommended_vacancies"].append(vacancy)
+        recommendations_data["recommended_vacancies"].append(vacancy)
 
 
 async def parse_stack_stats(li_element: ElementHandle, keywords: list[str]):
@@ -74,26 +78,26 @@ async def parse_stack_stats(li_element: ElementHandle, keywords: list[str]):
 
         for keyword in keywords:
             if keyword in text:
-                data["stack_statistics"][keyword] = (
-                    data["stack_statistics"].get(keyword, 0) + 1
+                stats_data["stack_statistics"][keyword] = (
+                    stats_data["stack_statistics"].get(keyword, 0) + 1
                 )
 
 
 async def parse_job_item(li_element: ElementHandle, keywords: list[str]):
     if ARG_STATS:
         await parse_stack_stats(li_element, keywords)
-    else:  # ARG_RECOMMEND:
+    else:
         await parse_recommendation(li_element, keywords)
 
 
-async def parse_page_list(page: Page, kewords: list[str]):
+async def parse_page_list(page: Page, keywords: list[str]):
     await page.wait_for_selector(VACANCY_LIST_SELECTORS["job_link"])
     await asyncio.sleep(random.uniform(1, 7))
 
     job_items = await page.query_selector_all(VACANCY_LIST_SELECTORS["job_item"])
 
     for li in job_items:
-        await parse_job_item(li, kewords)
+        await parse_job_item(li, keywords)
 
 
 async def run_parser(url: str, keywords: list[str]):
@@ -104,6 +108,7 @@ async def run_parser(url: str, keywords: list[str]):
         page = await browser.new_page()
 
         total_pages = 0
+        data = stats_data if ARG_STATS else recommendations_data
 
         await page.goto(url, timeout=60000)
         await page.wait_for_selector(VACANCY_LIST_SELECTORS["jobs_total"])
@@ -113,8 +118,7 @@ async def run_parser(url: str, keywords: list[str]):
             total_jobs = int(
                 await page.inner_text(VACANCY_LIST_SELECTORS["jobs_total"])
             )
-            total_pages = (int(total_jobs) + PAGE_SIZE - 1) // PAGE_SIZE
-
+            total_pages = (total_jobs + PAGE_SIZE - 1) // PAGE_SIZE
             data["jobs_total"] = total_jobs
         except Exception as e:
             print(e)
@@ -124,7 +128,6 @@ async def run_parser(url: str, keywords: list[str]):
         if total_pages > 1:
             for current_page in range(2, total_pages):
                 new_url = f"{url}&page={current_page}"
-
                 await page.goto(new_url, timeout=60000)
                 await parse_page_list(page, keywords)
                 await asyncio.sleep(random.uniform(1, 5))
@@ -139,5 +142,4 @@ async def run_parser(url: str, keywords: list[str]):
                 print_result(data)
 
         await browser.close()
-
         print("done")
