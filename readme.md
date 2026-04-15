@@ -2,8 +2,6 @@
 
 A CLI tool for parsing Djinni job listings, ranking vacancies by keyword relevance, and analyzing technology trends via Stack Statistics mode.
 
-### Deprecated — the UI has changed, and I need to update the selectors.
-
 ## Options
 
 ```console
