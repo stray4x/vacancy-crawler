@@ -10,10 +10,12 @@ from constants.parser import PAGE_SIZE, VACANCY_LIST_SELECTORS
 from utils.args import ARG_HEADLESS, ARG_OUT, ARG_STATS
 from utils.types import StatsData, RecommendationsData
 
+applications_count: list[int] = []
 
 stats_data: StatsData = {
     "jobs_total": 0,
     "max_applications": 0,
+    "median_applications": 0,
     "total_applications": 0,
     "stack_statistics": {},
 }
@@ -22,6 +24,17 @@ recommendations_data: RecommendationsData = {
     "jobs_total": 0,
     "recommended_vacancies": [],
 }
+
+
+def calculate_median(values: list[int]) -> float:
+    values = sorted(values)
+    n = len(values)
+    mid = n // 2
+
+    if n % 2 == 0:
+        return (values[mid - 1] + values[mid]) / 2
+    else:
+        return values[mid]
 
 
 async def parse_job_applications(li_element: ElementHandle):
@@ -39,6 +52,7 @@ async def parse_job_applications(li_element: ElementHandle):
             if match:
                 count = int(match.group())
                 stats_data["total_applications"] += count
+                applications_count.append(count)
 
                 if count > stats_data["max_applications"]:
                     stats_data["max_applications"] = count
@@ -108,20 +122,10 @@ async def run_parser(url: str, keywords: list[str]):
         page = await browser.new_page()
 
         total_pages = 0
-        data = stats_data if ARG_STATS else recommendations_data
 
         await page.goto(url, timeout=60000)
         await page.wait_for_selector(VACANCY_LIST_SELECTORS["jobs_total"])
         await asyncio.sleep(random.uniform(0.1, 2))
-
-        try:
-            total_jobs = int(
-                await page.inner_text(VACANCY_LIST_SELECTORS["jobs_total"])
-            )
-            total_pages = (total_jobs + PAGE_SIZE - 1) // PAGE_SIZE
-            data["jobs_total"] = total_jobs
-        except Exception as e:
-            print(e)
 
         await parse_page_list(page, keywords)
 
@@ -131,6 +135,19 @@ async def run_parser(url: str, keywords: list[str]):
                 await page.goto(new_url, timeout=60000)
                 await parse_page_list(page, keywords)
                 await asyncio.sleep(random.uniform(1, 5))
+
+        if len(applications_count) > 0:
+            stats_data["median_applications"] = calculate_median(applications_count)
+        data = stats_data if ARG_STATS else recommendations_data
+
+        try:
+            total_jobs = int(
+                await page.inner_text(VACANCY_LIST_SELECTORS["jobs_total"])
+            )
+            total_pages = (total_jobs + PAGE_SIZE - 1) // PAGE_SIZE
+            data["jobs_total"] = total_jobs
+        except Exception as e:
+            print(e)
 
         match ARG_OUT:
             case "file":

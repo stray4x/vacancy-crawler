@@ -66,11 +66,14 @@ def print_result(data: StatsData | RecommendationsData):
 def _print_stats(data: StatsData):
     print(f"[+] Total jobs: {data['jobs_total']}")
     print(f"[+] Max applications per job: {data['max_applications']}")
-    print(f"[+] Total applications: {data['total_applications']}")
+    print(f"[+] Median applications per job: {data['median_applications']}")
+
     if data["jobs_total"] > 0:
         print(
             f"[+] Average applications per job: {data['total_applications'] / data['jobs_total']:.2f}\n"
         )
+
+    print(f"[+] Total applications: {data['total_applications']}")
 
     sorted_stats = sort_stack_stats(data["stack_statistics"])
     for idx, (tech, count) in enumerate(sorted_stats.items(), 1):
